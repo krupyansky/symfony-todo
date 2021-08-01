@@ -1,0 +1,27 @@
+FROM php:8.0-cli-alpine
+
+ENV XDEBUG_VERSION 3.0.3
+
+RUN apk add --no-cache postgresql-dev freetype-dev libjpeg-turbo-dev libpng-dev libzip-dev bash coreutils git \
+    && git clone --branch $XDEBUG_VERSION --depth 1 https://github.com/xdebug/xdebug.git /usr/src/php/ext/xdebug \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd \
+    && docker-php-ext-configure xdebug --enable-xdebug-dev \
+    && docker-php-ext-install pdo pdo_mysql xdebug \
+    && apk del git libzip-dev
+
+RUN apk add --no-cache unzip
+
+RUN mv $PHP_INI_DIR/php.ini-development $PHP_INI_DIR/php.ini
+
+COPY ./common/php/conf.d /usr/local/etc/php/conf.d
+COPY ./development/php/conf.d /usr/local/etc/php/conf.d
+
+COPY ./common/wait-for-it.sh /usr/local/bin/wait-for-it
+RUN chmod 555 /usr/local/bin/wait-for-it
+
+ENV COMPOSER_ALLOW_SUPERUSER 1
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/bin --filename=composer --quiet
+
+WORKDIR /app

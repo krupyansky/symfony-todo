@@ -1,0 +1,48 @@
+﻿version: "3.7"
+services:
+    app:
+        build:
+            context: docker
+            dockerfile: development/nginx/Dockerfile
+        ports:
+            - "8080:80"
+        volumes:
+            - ./:/app
+
+    app-php-fpm:
+        build:
+            context: docker
+            dockerfile: development/php-fpm/Dockerfile
+        environment:
+            APP_ENV: dev
+            APP_DEBUG: 1
+            DB_HOST: app-db
+            DB_USER: todo
+            DB_PASSWORD: test
+            DB_NAME: todo
+        volumes:
+            - ./:/app
+
+    app-php-cli:
+        build:
+            context: docker
+            dockerfile: development/php-cli/Dockerfile
+        environment:
+            APP_ENV: dev
+            APP_DEBUG: 1
+            DB_HOST: app-db
+            DB_USER: todo
+            DB_PASSWORD: test
+            DB_NAME: todo
+        volumes:
+            - ./:/app
+
+    app-db:
+        restart: always
+        image: postgres:latest
+        volumes:
+            - ./.database/postgres/data:/var/lib/postgresql/data
+        environment:
+            - POSTGRES_PASSWORD=test
+        ports:
+            - 54321:5432
