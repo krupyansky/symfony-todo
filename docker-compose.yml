@@ -38,11 +38,15 @@ services:
             - ./:/app
 
     app-db:
+        image: mariadb:10.5
         restart: always
-        image: postgres:latest
-        volumes:
-            - ./.database/postgres/data:/var/lib/postgresql/data
         environment:
-            - POSTGRES_PASSWORD=test
+            MYSQL_DATABASE: todo
+            MYSQL_USER: todo
+            MYSQL_PASSWORD: test
+            MYSQL_ROOT_PASSWORD: test
+        command: [ '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci' ]
+        volumes:
+            - ./.database/postgres/data:/var/lib/mysql/data
         ports:
-            - 54321:5432
+            - "33064:3306"
