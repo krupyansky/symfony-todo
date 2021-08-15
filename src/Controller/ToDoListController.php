@@ -18,9 +18,25 @@ class ToDoListController extends AbstractController
     #[Route('/api/v1/list', name: 'show_tasks', methods: 'GET')]
     public function index(): Response
     {
+        /** @var Task[] $tasks */
+        $tasks = $this
+            ->getDoctrine()
+            ->getRepository(Task::class)
+            ->findBy([], ['id' => 'DESC']);
+
+        $col = [];
+
+        foreach ($tasks as $task) {
+            $col[] = [
+                'id' => $task->getId(),
+                'title' => $task->getTitle(),
+                'status' => $task->getStatus()
+            ];
+        }
+
         return $this->json([
             'message' => 'List of tasks!',
-            'path' => 'src/Controller/ToDoListController.php',
+            'tasks' => $col
         ]);
     }
 
@@ -50,18 +66,37 @@ class ToDoListController extends AbstractController
     #[Route('/api/v1/switch-status/{id}', name: 'switch_status', methods: 'PATCH')]
     public function switchStatus(int $id): Response
     {
+        $em = $this->getDoctrine()->getManager();
+
+        /** @var Task $task */
+        $task = $em->getRepository(Task::class)->find($id);
+
+        $task->setStatus(!$task->getStatus());
+
+        $em->flush();
+
         return $this->json([
-            'message' => sprintf('Switch status of the task! %d', $id),
-            'path' => 'src/Controller/ToDoListController.php',
+            'message' => sprintf('Switch status of the task! %d', $id)
         ]);
     }
 
     #[Route('/api/v1/delete/{id}', name: 'delete_task', methods: 'DELETE')]
     public function delete(int $id): Response
     {
+        $em = $this->getDoctrine()->getManager();
+        $task = $em->getRepository(Task::class)->find($id);
+
+        if (is_null($task)) {
+            return $this->json([
+                'message' => sprintf('The task with id %d not exists', $id),
+            ]);
+        }
+
+        $em->remove($task);
+        $em->flush();
+
         return $this->json([
             'message' => sprintf('Delete the task! %d', $id),
-            'path' => 'src/Controller/ToDoListController.php',
         ]);
     }
 }

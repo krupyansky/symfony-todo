@@ -39,4 +39,4 @@ api-wait-db:
 	docker-compose run --rm api-php-cli wait-for-it api-maria:3306 -t 30
 
 api-migrations:
-	docker-compose run --rm api-php-cli composer app migrate -- --interactive=0
+	docker-compose run --rm app-php-cli bin/console doctrine:migrations:migrate
